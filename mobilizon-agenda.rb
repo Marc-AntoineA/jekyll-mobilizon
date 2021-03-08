@@ -91,6 +91,10 @@ module Jekyll
                   url,
                   beginsOn,
                   endsOn,
+                  options {
+                    showStartTime,
+                    showEndTime,
+                  },
                   attributedTo {
                     avatar {
                       url,
@@ -252,7 +256,7 @@ module Jekyll
       context.stack do
         site = context.registers[:site]
         return unless site.config['mobilizon_fetch'] == true
-        tags_and_organizers = context[@markup.strip()].split(',')
+        tags_and_organizers = context[@markup.strip()].split(',').map{ |tag|tag.downcase }
 
         events = fetch_or_get_cached_events(site)
 
@@ -285,8 +289,17 @@ module Jekyll
         events.each_with_index do |event, index|
           context["event"] = event
           context["event"]["index"] = index
-          context["event"]["beginsOn"] = change_to_timezone context["event"]["beginsOn"], site.config["mobilizon_timezone"]
-          context["event"]["endsOn"] = change_to_timezone context["event"]["endsOn"], site.config["mobilizon_timezone"]
+          if context["event"]["options"]["showStartTime"]
+             context["event"]["beginsOn"] = change_to_timezone context["event"]["beginsOn"], site.config["mobilizon_timezone"]
+           else
+             context["event"]["beginsOn"] = context["event"]["beginsOn"].split('T')[0]
+          end
+          if context["event"]["options"]["showEndTime"]
+             context["event"]["endsOn"] = change_to_timezone context["event"]["endsOn"], site.config["mobilizon_timezone"]
+           else
+             context["event"]["endsOn"] = context["event"]["endsOn"].split('T')[0]
+          end
+
           if context["event"]["picture"]
             context["event"]["thumbnailurl"] = URI::encode(File.join site.config['mobilizon_cachedir'], "media", context["event"]["picture"]["url"].gsub(/[\ :\/\?=]+/, '_'))
           end
