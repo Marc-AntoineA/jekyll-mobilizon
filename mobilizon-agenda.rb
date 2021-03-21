@@ -21,6 +21,8 @@ module Jekyll
 
     def fetch_and_thumbnail_image(site, url, cache_dir)
       cache_name = url.gsub /[\ :\/\?=]+/, '_'
+      point_index = cache_name.rindex('.')
+      cache_name = cache_name[0..[240, point_index].min()] + cache_name[point_index..cache_name.size]
       cache_dir_media = File.join cache_dir, 'media'
       cache_path = File.join cache_dir_media, cache_name
 
@@ -239,6 +241,13 @@ module Jekyll
       return cache
     end # def generate
 
+    def to_local_url(site, url)
+      url = url.gsub(/[\ :\/\?=]+/, '_')
+      point_index = url.rindex('.')
+      url = url[0..[240, point_index].min()] + url[point_index..url.size]
+      URI::encode(File.join site.config['mobilizon_cachedir'], "media", url)
+    end
+
     def filter_events(events, tags_and_organizers)
       return events.select { |event| (tags_and_organizers.include? event['attributedTo']['preferredUsername']) || !(tags_and_organizers & (event['tags'].map { |tag| tag['slug'].downcase })).empty? || !(tags_and_organizers & (event['tags'].map { |tag| tag['title'].downcase })).empty? }
     end # def filter_events
@@ -301,7 +310,7 @@ module Jekyll
           end
 
           if context["event"]["picture"]
-            context["event"]["thumbnailurl"] = URI::encode(File.join site.config['mobilizon_cachedir'], "media", context["event"]["picture"]["url"].gsub(/[\ :\/\?=]+/, '_'))
+            context["event"]["thumbnailurl"] = to_local_url site, context["event"]["picture"]["url"]
           end
           if context["event"]["physicalAddress"] && context["event"]["physicalAddress"]["locality"]
             if context["event"]["physicalAddress"]["description"] == context["event"]["physicalAddress"]["locality"]
@@ -311,12 +320,7 @@ module Jekyll
             end
           end
           if context["event"]["attributedTo"] && context["event"]["attributedTo"]["avatar"] && context["event"]["attributedTo"]["avatar"]["url"]
-            context["event"]["organizerAvatar"] = URI::encode(
-                File.join(site.config['mobilizon_cachedir'],
-                  "media",
-                  context["event"]["attributedTo"]["avatar"]["url"].gsub(/[\ :\/\?=]+/, '_')
-                  )
-                )
+            context["event"]["organizerAvatar"] = to_local_url site, context["event"]["attributedTo"]["avatar"]["url"]
           end
           if context["event"]["attributedTo"] && context["event"]["attributedTo"]["name"]
             context["event"]["organizer"] = context["event"]["attributedTo"]["name"]
