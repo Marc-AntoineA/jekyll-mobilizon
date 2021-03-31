@@ -1,5 +1,7 @@
 # Script to include Mobilizon into Jekyll-website
 
+*This plugin is used in production since January 2021. Please contact me at contact@marc-antoinea.fr if needed.*
+
 This plugin fetches incoming events for a list of groups in a given mobilizon instance (through graphql api).
 Images are fetched too and thumbnailed with `minimagick`. It means that no requests are made to mobilizon except during website compilations.
 
